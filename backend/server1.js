@@ -190,10 +190,8 @@ const CONTRACT_ABI = [
     }
 ];
 
-// Initialize Ethereum provider and wallet using Ethers.js v6 syntax
-const provider = new ethers.JsonRpcProvider(RPC_URL); // Corrected for v6
-console.log("Ethereum provider initialized:", provider);
-
+// Initialize Ethereum provider and wallet
+const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, wallet);
 
@@ -225,23 +223,23 @@ app.post("/withdraw", async (req, res) => {
         console.log(`Processing withdrawal for user: ${userAddress}, amount: ${amount}`);
 
         // Parse amount to match USDT's 6 decimal places
-        const parsedAmount = ethers.parseUnits(amount.toString(), 6); // Updated for v6
+        const parsedAmount = ethers.utils.parseUnits(amount.toString(), 6);
 
         // Fetch recommended gas fees
         const feeData = await provider.getFeeData();
         const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas
-            ? feeData.maxPriorityFeePerGas + ethers.parseUnits("30", "gwei") // Simple addition in v6
-            : ethers.parseUnits("30", "gwei"); // Fallback if undefined
+            ? feeData.maxPriorityFeePerGas.add(ethers.utils.parseUnits("30", "gwei"))
+            : ethers.utils.parseUnits("30", "gwei"); // Fallback if undefined
         const maxFeePerGas = feeData.maxFeePerGas
-            ? feeData.maxFeePerGas + ethers.parseUnits("60", "gwei") // Simple addition in v6
-            : ethers.parseUnits("60", "gwei"); // Fallback if undefined
+            ? feeData.maxFeePerGas.add(ethers.utils.parseUnits("60", "gwei"))
+            : ethers.utils.parseUnits("60", "gwei"); // Fallback if undefined
 
         // Estimate gas limit
         const gasLimit = await contract.estimateGas.withdrawUSDT(userAddress, parsedAmount);
 
         // Build the transaction
         const tx = await contract.withdrawUSDT(userAddress, parsedAmount, {
-            gasLimit: gasLimit + 20000, // Add buffer; in v6, BigNumber is handled differently
+            gasLimit: gasLimit.add(ethers.BigNumber.from("20000")), // Add buffer
             maxPriorityFeePerGas,
             maxFeePerGas,
         });
@@ -267,10 +265,10 @@ app.get("/gasFees", async (req, res) => {
     try {
         const feeData = await provider.getFeeData();
         const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas
-            ? ethers.formatUnits(feeData.maxPriorityFeePerGas, "gwei") // Updated for v6
+            ? ethers.utils.formatUnits(feeData.maxPriorityFeePerGas, "gwei")
             : "30"; // Default value if undefined
         const maxFeePerGas = feeData.maxFeePerGas
-            ? ethers.formatUnits(feeData.maxFeePerGas, "gwei") // Updated for v6
+            ? ethers.utils.formatUnits(feeData.maxFeePerGas, "gwei")
             : "60"; // Default value if undefined
 
         res.status(200).json({ maxPriorityFeePerGas, maxFeePerGas });
