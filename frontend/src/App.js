@@ -1,11 +1,15 @@
 import React from "react";
-import PaymentForm from "./components/PaymentForm";
+import { BrowserRouter } from "react-router-dom";
+import HomePage from "./components/HomePage";
+import "./index.css";
 
 function App() {
   return (
-    <div>
-      <PaymentForm />
-    </div>
+    <BrowserRouter>
+      <div className="min-h-screen w-full">
+        <HomePage />
+      </div>
+    </BrowserRouter>
   );
 }
 
