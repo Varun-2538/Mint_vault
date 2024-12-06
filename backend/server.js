@@ -17,6 +17,13 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(bodyParser.json());
 
+// Add middleware to parse incoming requests
+app.use(bodyParser.json()); // Parse JSON payloads
+app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded form data
+
+// Optional: Increase the body parser size limit if the payloads are large
+app.use(bodyParser.urlencoded({ extended: true, limit: '1mb' }));
+
 // --------------------- Ethereum Smart Contract Configuration ---------------------
 
 // Load environment variables for Ethereum
@@ -213,51 +220,32 @@ const PAYU_URL = process.env.PAYU_URL || "https://test.payu.in/_payment"; // Use
  * POST /withdraw
  * Body: { userAddress: string, amount: number | string }
  */
-app.post("/withdraw", async (req, res) => {
-    const { userAddress, amount } = req.body;
+app.post("/success", (req, res) => {
+  console.log("Headers:", req.headers); // Debug headers
+  console.log("Body (parsed):", req.body); // Debug parsed body
 
-    // Validate input
-    if (!userAddress || !amount) {
-        return res.status(400).json({ error: "Invalid input. Provide userAddress and amount." });
-    }
+  const { txnid, amount, productinfo, firstname, email, status, hash } = req.body;
 
-    try {
-        console.log(`Processing withdrawal for user: ${userAddress}, amount: ${amount}`);
+  if (!txnid || !amount || !productinfo || !firstname || !email || !status || !hash) {
+      console.error("Missing required fields in callback data.");
+      return res.status(400).send("Invalid callback data.");
+  }
 
-        // Parse amount to match USDT's 6 decimal places
-        const parsedAmount = ethers.parseUnits(amount.toString(), 6); // Updated for v6
+  const reverseHashString = `${PAYU_SALT}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${PAYU_KEY}`;
+  console.log("Reverse hash string:", reverseHashString);
 
-        // Fetch recommended gas fees
-        const feeData = await provider.getFeeData();
-        const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas
-            ? feeData.maxPriorityFeePerGas + ethers.parseUnits("30", "gwei") // Simple addition in v6
-            : ethers.parseUnits("30", "gwei"); // Fallback if undefined
-        const maxFeePerGas = feeData.maxFeePerGas
-            ? feeData.maxFeePerGas + ethers.parseUnits("60", "gwei") // Simple addition in v6
-            : ethers.parseUnits("60", "gwei"); // Fallback if undefined
+  const calculatedHash = crypto.createHash("sha512").update(reverseHashString).digest("hex");
+  console.log("Calculated hash:", calculatedHash);
 
-        // Estimate gas limit
-        const gasLimit = await contract.estimateGas.withdrawUSDT(userAddress, parsedAmount);
-
-        // Build the transaction
-        const tx = await contract.withdrawUSDT(userAddress, parsedAmount, {
-            gasLimit: gasLimit + 20000, // Add buffer; in v6, BigNumber is handled differently
-            maxPriorityFeePerGas,
-            maxFeePerGas,
-        });
-
-        console.log("Transaction sent:", tx.hash);
-
-        // Wait for transaction confirmation
-        const receipt = await tx.wait();
-        console.log("Transaction confirmed:", receipt.transactionHash);
-
-        res.status(200).json({ success: true, txHash: receipt.transactionHash });
-    } catch (error) {
-        console.error("Error processing withdrawal:", error);
-        res.status(500).json({ error: "Failed to process withdrawal." });
-    }
+  if (hash === calculatedHash) {
+      console.log("Hash validation successful!");
+      res.send("Payment successful and hash verified!");
+  } else {
+      console.error("Hash validation failed!");
+      res.status(400).send("Hash validation failed.");
+  }
 });
+
 
 /**
  * Endpoint to fetch recommended gas fees
@@ -364,23 +352,32 @@ app.post("/initiate-payment", async (req, res) => {
  * POST /success
  */
 app.post("/success", (req, res) => {
-    const { txnid, amount, productinfo, firstname, email, status, hash } = req.body;
+  console.log("Headers:", req.headers);
+  console.log("Body:", req.body);
 
-    console.log("Payment success response received:", req.body);
+  const { txnid, amount, productinfo, firstname, email, status, hash } = req.body;
 
-    // Validate the hash returned by PayU
-    const reverseHashString = `${PAYU_SALT}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${PAYU_KEY}`;
-    const calculatedHash = crypto.createHash("sha512").update(reverseHashString).digest("hex");
+  if (!txnid || !amount || !productinfo || !firstname || !email || !status || !hash) {
+      console.error("Missing required fields in callback data.");
+      return res.status(400).send("Invalid callback data.");
+  }
 
-    if (hash === calculatedHash) {
-        console.log("Hash validation successful!");
-        // You can add additional logic here, such as updating the database or triggering other services
-        res.send("Payment successful and hash verified!");
-    } else {
-        console.error("Hash validation failed!");
-        res.status(400).send("Payment success but hash validation failed.");
-    }
+  const reverseHashString = `${PAYU_SALT}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${PAYU_KEY}`;
+  console.log("Reverse hash string:", reverseHashString);
+
+  const calculatedHash = crypto.createHash("sha512").update(reverseHashString).digest("hex");
+  console.log("Calculated hash:", calculatedHash);
+
+  if (hash === calculatedHash) {
+      console.log("Hash validation successful!");
+      res.send("Payment successful and hash verified!");
+  } else {
+      console.error("Hash validation failed!");
+      res.status(400).send("Hash validation failed.");
+  }
 });
+
+
 
 /**
  * Failure Callback Endpoint
