@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import crypto from "crypto";
 import { ethers } from "ethers";
+import axios from "axios";
 
 // Initialize environment variables
 dotenv.config();
@@ -23,6 +24,36 @@ app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded form da
 
 // Optional: Increase the body parser size limit if the payloads are large
 app.use(bodyParser.urlencoded({ extended: true, limit: "1mb" }));
+
+let cachedRates = null; // Cache for API response
+let lastFetchTime = 0; // Time of the last fetch
+const CACHE_DURATION = 60000; // Cache duration (60 seconds)
+
+app.get("/crypto-prices", async (req, res) => {
+  const { ids } = req.query;
+
+  if (!ids) {
+    return res.status(400).json({ error: "Missing 'ids' parameter" });
+  }
+
+  const currentTime = Date.now();
+  if (cachedRates && currentTime - lastFetchTime < CACHE_DURATION) {
+    console.log("Serving from cache");
+    return res.json(cachedRates); // Return cached response
+  }
+
+  try {
+    const response = await axios.get(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=inr`
+    );
+    cachedRates = response.data; // Update cache
+    lastFetchTime = currentTime; // Update last fetch time
+    res.json(response.data);
+  } catch (error) {
+    console.error("Error fetching crypto prices:", error.message);
+    res.status(500).json({ error: "Failed to fetch crypto prices" });
+  }
+});
 
 // --------------------- Ethereum Smart Contract Configuration ---------------------
 

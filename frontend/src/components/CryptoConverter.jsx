@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import debounce from "lodash/debounce";
 import { useWallet } from "./WalletContext";
 
 const CryptoConverter = () => {
@@ -13,31 +14,25 @@ const CryptoConverter = () => {
   const [upiValidationStatus, setUpiValidationStatus] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const cryptoOptions = [
-    // {
-    //   id: "ethereum",
-    //   symbol: "ETH",
-    //   icon: "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=025",
-    // },
-    // {
-    //   id: "matic-network",
-    //   symbol: "MATIC",
-    //   icon: "https://cryptologos.cc/logos/polygon-matic-logo.svg?v=025",
-    // },
+  const cryptoOptions = [    
     {
       id: "tether",
       symbol: "USDT",
       icon: "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=025",
     },
+    {
+      id: "ethereum",
+      symbol: "ETH",
+      icon: "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=025",
+    },    
   ];
 
   useEffect(() => {
     const fetchRates = async () => {
       try {
+        const ids = cryptoOptions.map((option) => option.id).join(",");
         const response = await axios.get(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${cryptoOptions
-            .map((option) => option.id)
-            .join(",")}&vs_currencies=inr`
+          `http://localhost:5000/crypto-prices?ids=${ids}`
         );
         setCryptoRates(response.data);
       } catch (error) {
@@ -46,7 +41,7 @@ const CryptoConverter = () => {
     };
 
     fetchRates();
-    const interval = setInterval(fetchRates, 60000);
+    const interval = setInterval(fetchRates, 600000); // Fetch rates every 10 minutes
     return () => clearInterval(interval);
   }, []);
 
@@ -54,14 +49,25 @@ const CryptoConverter = () => {
     const amount = e.target.value;
     setInrAmount(amount);
 
-    const rate = cryptoRates[crypto]?.inr || 0;
+    debouncedFetchRates(amount); // Debounced API call
+  };
 
-    // Calculate crypto amount
-    const calculatedCryptoAmount = amount
+  const debouncedFetchRates = debounce((amount) => {
+    const rate = cryptoRates[crypto]?.inr;
+
+    const calculatedCryptoAmount = amount && rate
       ? (parseFloat(amount) / rate).toFixed(6)
       : "";
+
     setCryptoAmount(calculatedCryptoAmount);
-  };
+    console.log("Calculated Crypto Amount:", calculatedCryptoAmount);
+  }, 500); // 3-second delay
+
+  useEffect(() => {
+    return () => {
+      debouncedFetchRates.cancel(); // Clean up debounced calls on unmount
+    };
+  }, []);
 
   const handleCryptoChange = (e) => {
     const selectedCrypto = e.target.value;

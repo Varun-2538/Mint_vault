@@ -35,6 +35,14 @@ export default function Navbar() {
               className="font-medium text-lg cursor-pointer text-blue-700 hover:text-cyan-900"
               href="#"
             >
+              Home
+            </a>
+          </li>
+          <li>
+            <a
+              className="font-medium text-lg cursor-pointer text-blue-700 hover:text-cyan-900"
+              href="#"
+            >
               Liquidity Pool
             </a>
           </li>
@@ -46,12 +54,12 @@ export default function Navbar() {
               Staking
             </a>
           </li>
-          <li>
+          {/* <li>
             <CustomButton
               primaryText={walletAddress ? "Connected" : "Connect Wallet"}
               onClick={connectWallet}
             />
-          </li>
+          </li> */}
           <li>
             <CustomButton
               primaryText="Login"
