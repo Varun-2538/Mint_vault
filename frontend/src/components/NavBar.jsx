@@ -12,7 +12,7 @@ export default function Navbar() {
 
   const navigate = useNavigate();
   const { authenticate, createWallet, logOut, showWidgetModal } = useOkto();
-  const { walletAddress, updateWalletAddress, connectWallet, disconnectWallet } = useWallet();
+  const { updateWalletAddress, connectWallet, disconnectWallet } = useWallet();
 
   // Toggle Navbar visibility for mobile
   const handleShowNavbar = () => {
@@ -29,7 +29,7 @@ export default function Navbar() {
           setAuthToken(authResponse.auth_token);
 
           // Fetch Wallet Address after login
-          await fetchGoogleWalletAddress();
+          await fetchWalletAddress();
           setError(null);
         } else {
           console.error("Authentication failed:", error);
@@ -42,13 +42,13 @@ export default function Navbar() {
     }
   };
 
-  // Fetch Wallet Address from Google authentication
-  const fetchGoogleWalletAddress = async () => {
+  // Fetch Wallet Address
+  const fetchWalletAddress = async () => {
     try {
-      const walletData = await createWallet();
+      const walletData = await createWallet(); // Fetch the wallet
       if (walletData.wallets && walletData.wallets.length > 0) {
-        const googleWalletAddress = walletData.wallets[0].address;
-        updateWalletAddress(googleWalletAddress); // Sync with context
+        const address = walletData.wallets[0].address;
+        updateWalletAddress(address); // Update WalletContext
       } else {
         throw new Error("No wallet found");
       }
@@ -63,7 +63,7 @@ export default function Navbar() {
     try {
       await logOut();
       setAuthToken(null);
-      updateWalletAddress(null); // Clear wallet address in context
+      updateWalletAddress(null); // Clear wallet address from context
       setError(null);
       navigate("/");
     } catch (err) {
@@ -76,13 +76,20 @@ export default function Navbar() {
   const handleDisconnectWallet = async () => {
     try {
       await disconnectWallet(); // Disconnect Ethereum wallet
-      updateWalletAddress(null); // Clear wallet address in context
+      updateWalletAddress(null); // Clear wallet address from context
       console.log("Wallet disconnected");
     } catch (err) {
       console.error("Error disconnecting wallet:", err);
       setError("Failed to disconnect wallet.");
     }
   };
+
+  // Automatically fetch wallet address if logged in via Google
+  useEffect(() => {
+    if (authToken) {
+      fetchWalletAddress();
+    }
+  }, [authToken]);
 
   return (
     <nav className="w-9/12 xl:w-11/12 2xl:w-9/12 z-50 h-16 rounded-[60px] px-6 py-4 xl:py-2 bg-white backdrop-blur-xl shadow-xl border-stone-50 border-1 mx-auto mt-4 mb-16 fixed left-1/2 -translate-x-1/2">
@@ -110,7 +117,7 @@ export default function Navbar() {
               Staking
             </a>
           </li>
-          {/* Display Google Login or Wallet Details */}
+          {/* Display Google Login or Logout Button */}
           <li>
             {!authToken ? (
               <GoogleLogin
@@ -118,31 +125,15 @@ export default function Navbar() {
                 onError={() => console.error("Google Login Failed")}
               />
             ) : (
-              <div className="flex flex-col items-center">
-                {walletAddress ? (
-                  <p className="font-medium text-lg text-green-700">
-                    Wallet: {walletAddress}
-                  </p>
-                ) : (
-                  <p>Fetching Wallet...</p>
-                )}
-                <CustomButton primaryText="Logout" onClick={handleLogout} />
-              </div>
+              <CustomButton primaryText="Logout" onClick={handleLogout} />
             )}
           </li>
           {/* Connect Wallet Button */}
           <li>
-            {!walletAddress ? (
-              <CustomButton
-                primaryText="Connect Wallet"
-                onClick={connectWallet}
-              />
-            ) : (
-              <CustomButton
-                primaryText="Disconnect Wallet"
-                onClick={handleDisconnectWallet}
-              />
-            )}
+            <CustomButton
+              primaryText={!authToken ? "Connect Wallet" : "Disconnect Wallet"}
+              onClick={!authToken ? connectWallet : handleDisconnectWallet}
+            />
           </li>
           {/* Show Widget Button */}
           <li>
