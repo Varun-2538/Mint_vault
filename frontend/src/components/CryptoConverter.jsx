@@ -27,23 +27,30 @@ const CryptoConverter = () => {
     },    
   ];
 
-  useEffect(() => {
-    const fetchRates = async () => {
-      try {
-        const ids = cryptoOptions.map((option) => option.id).join(",");
-        const response = await axios.get(
-          `http://localhost:5000/crypto-prices?ids=${ids}`
-        );
-        setCryptoRates(response.data);
-      } catch (error) {
-        console.error("Error fetching crypto rates:", error);
-      }
-    };
+  
 
-    fetchRates();
-    const interval = setInterval(fetchRates, 600000); // Fetch rates every 10 minutes
-    return () => clearInterval(interval);
-  }, []);
+    useEffect(() => {
+        const fetchRates = async () => {
+            try {
+            const ids = cryptoOptions.map((option) => option.id).join(",");
+            const response = await axios.get(
+                `http://localhost:5000/crypto-prices?ids=${ids}`
+            );
+            setCryptoRates(response.data);
+            } catch (error) {
+            console.error("Error fetching crypto rates:", error);
+            }
+        };
+
+        // Initial fetch
+        fetchRates();
+
+        // Set up interval and store the returned interval ID
+        const intervalId = setInterval(fetchRates, 600000); // Fetch rates every 10 minutes
+
+        // Cleanup function to clear interval when component unmounts
+        return () => clearInterval(intervalId);
+    }, []); // Empty dependency array means this effect runs once on mount
 
   const handleInrAmountChange = (e) => {
     const amount = e.target.value;

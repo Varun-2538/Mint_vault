@@ -29,6 +29,7 @@ let cachedRates = null; // Cache for API response
 let lastFetchTime = 0; // Time of the last fetch
 const CACHE_DURATION = 60000; // Cache duration (60 seconds)
 
+// Add more robust error handling in the crypto prices endpoint
 app.get("/crypto-prices", async (req, res) => {
   const { ids } = req.query;
 
@@ -36,22 +37,24 @@ app.get("/crypto-prices", async (req, res) => {
     return res.status(400).json({ error: "Missing 'ids' parameter" });
   }
 
-  const currentTime = Date.now();
-  if (cachedRates && currentTime - lastFetchTime < CACHE_DURATION) {
-    console.log("Serving from cache");
-    return res.json(cachedRates); // Return cached response
-  }
-
   try {
     const response = await axios.get(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=inr`
+      `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=inr`,
+      {
+        headers: {
+          'User-Agent': 'YourAppName/1.0', // Good practice for API requests
+          'Accept': 'application/json'
+        },
+        timeout: 5000 // 5 second timeout
+      }
     );
-    cachedRates = response.data; // Update cache
-    lastFetchTime = currentTime; // Update last fetch time
     res.json(response.data);
   } catch (error) {
-    console.error("Error fetching crypto prices:", error.message);
-    res.status(500).json({ error: "Failed to fetch crypto prices" });
+    console.error("Detailed error fetching crypto prices:", error.response?.data || error.message);
+    res.status(500).json({ 
+      error: "Failed to fetch crypto prices", 
+      details: error.message 
+    });
   }
 });
 

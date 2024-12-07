@@ -5,13 +5,19 @@ import { useOkto } from "okto-sdk-react";
 import { useWallet } from "./WalletContext";
 import CustomButton from "./CustomButton";
 
+
 export default function Navbar() {
+  const [userDetails, setUserDetails] = useState(null);
   const [showNavbar, setShowNavbar] = useState(false);
+  const [wallets, setWallets] = useState(null);
   const [authToken, setAuthToken] = useState(null);
   const [error, setError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
+  const [modalContent, setModalContent] = useState(null); // Content to display in the modal
+
 
   const navigate = useNavigate();
-  const { authenticate, createWallet, logOut, showWidgetModal } = useOkto();
+  const { getUserDetails, authenticate, createWallet, logOut, showWidgetModal } = useOkto();
   const { updateWalletAddress, connectWallet, disconnectWallet } = useWallet();
 
   // Toggle Navbar visibility for mobile
@@ -39,6 +45,15 @@ export default function Navbar() {
     } catch (err) {
       console.error("Error during login:", err);
       setError("Login failed.");
+    }
+  };
+
+  const fetchWallets = async () => {
+    try {
+      const walletData = await createWallet();
+      setWallets(walletData.wallets); // Assume `wallets` is the key in the response
+    } catch (error) {
+      setError(`Failed to fetch wallets: ${error.message}`);
     }
   };
 
@@ -84,6 +99,31 @@ export default function Navbar() {
     }
   };
 
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleToggle = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setModalContent(null); // Clear modal content when closed
+  };
+
+  const fetchUserDetails = async () => {
+    try {
+      console.log("Fetching user details...");
+      const details = await getUserDetails();
+      console.log("User details fetched:", details);
+      setUserDetails(details);
+      setModalContent("userDetails"); // Set content type for modal
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      setError(`Failed to fetch user details: ${error.message}`);
+    }
+  };
+
   // Automatically fetch wallet address if logged in via Google
   useEffect(() => {
     if (authToken) {
@@ -116,7 +156,7 @@ export default function Navbar() {
           <li>
             <a
               className="font-medium text-lg cursor-pointer text-blue-700 hover:text-cyan-900"
-              href="#"
+              href="/liquidity-pool"
             >
               Liquidity Pool
             </a>
@@ -124,22 +164,13 @@ export default function Navbar() {
           <li>
             <a
               className="font-medium text-lg cursor-pointer text-blue-700 hover:text-cyan-900"
-              href="#"
+              href="/staking"
             >
               Staking
             </a>
           </li>
           {/* Display Google Login or Logout Button */}
-          <li>
-            {!authToken ? (
-              <GoogleLogin
-                onSuccess={handleGoogleLogin}
-                onError={() => console.error("Google Login Failed")}
-              />
-            ) : (
-              <CustomButton primaryText="Logout" onClick={handleLogout} />
-            )}
-          </li>
+          
           {/* Connect Wallet Button */}
           <li>
             <CustomButton
@@ -158,11 +189,67 @@ export default function Navbar() {
           <li>
             <CustomButton
               primaryText="Manage Wallet"
-              onClick={() => navigate("/wallet-manager")}
+              onClick={handleToggle}
             />
+            {isOpen && (
+              <div className="absolute mt-2 w-48 h-24 place-content-evenly bg-white/70 shadow-lg rounded-md ring-1 ring-gray-300 z-10">
+                <ul className="text-black font-semibold text-2xl w-full text-center">
+                  <li>
+                    <button
+                      onClick={fetchWallets}
+                      className="block px-4 py-2 text-base font-bold hover:bg-gray-100 w-full"
+                    >
+                      Wallet Manager
+                    </button>
+                    
+                  </li>
+                  <li>
+                    <button
+                      onClick={fetchUserDetails}
+                      className="block px-4 py-2 text-base font-bold hover:bg-gray-100 w-full"
+                    >
+                      User Details 
+                    </button>
+                    
+                  </li>
+                </ul>
+              </div>
+            )}
           </li>
+          
         </ul>
       </div>
+      {/* {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg w-96 max-w-full shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">{modalContent === "wallets" ? "Wallets" : "User Details"}</h2>
+              <button onClick={handleModalClose} className="text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+
+            
+            {modalContent === "wallets" && wallets && (
+              <div>
+                <h3>Wallets:</h3>
+                {wallets.map((wallet, index) => (
+                  <p key={index}>
+                    {wallet.network_name}: {wallet.address}
+                  </p>
+                ))}
+              </div>
+            )}
+
+            {modalContent === "userDetails" && userDetails && (
+              <div>
+                <h3>User Details:</h3>
+                <pre>{JSON.stringify(userDetails, null, 2)}</pre>
+              </div>
+            )}
+          </div>
+        </div>
+      )} */}
+
+
       {/* Display Error */}
       {error && (
         <div style={{ color: "red", textAlign: "center", marginTop: "10px" }}>
