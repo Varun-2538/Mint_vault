@@ -4,7 +4,7 @@ import { useWallet } from "./WalletContext";
 
 const CryptoConverter = () => {
   const { walletAddress } = useWallet();
-  const [crypto, setCrypto] = useState("ethereum");
+  const [crypto, setCrypto] = useState("tether");
   const [inrAmount, setInrAmount] = useState("");
   const [cryptoAmount, setCryptoAmount] = useState("");
   const [cryptoRates, setCryptoRates] = useState({});
@@ -14,16 +14,6 @@ const CryptoConverter = () => {
   const [loading, setLoading] = useState(false);
 
   const cryptoOptions = [
-    // {
-    //   id: "ethereum",
-    //   symbol: "ETH",
-    //   icon: "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=025",
-    // },
-    // {
-    //   id: "matic-network",
-    //   symbol: "MATIC",
-    //   icon: "https://cryptologos.cc/logos/polygon-matic-logo.svg?v=025",
-    // },
     {
       id: "tether",
       symbol: "USDT",
@@ -74,6 +64,8 @@ const CryptoConverter = () => {
     }
   };
 
+
+
   const validateUpi = async () => {
     if (!upiId) {
       alert("Please enter your UPI ID.");
@@ -106,6 +98,8 @@ const CryptoConverter = () => {
       setLoading(true);
       const response = await axios.post("http://localhost:5000/initiate-payment", {
         amount: inrAmount,
+        walletAddress: walletAddress,
+        usdtAmount: cryptoAmount,
         productinfo: "Crypto Purchase",
         firstname: "John Doe",
         email: "john.doe@example.com",
