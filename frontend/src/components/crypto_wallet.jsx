@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const CryptoWallet = () => {
   const [txHash, setTxHash] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Extract the txHash from the URL query parameter
@@ -23,7 +25,7 @@ const CryptoWallet = () => {
   }
 
   // Customize the block explorer link based on the network (e.g., Polygon)
-  const explorerUrl = `https://polygonscan.com/tx/${txHash}`; // For Polygon Network (you can change this to Etherscan for Ethereum)
+  const explorerUrl = `https://amoy.polygonscan.com/tx/${txHash}`; // For Polygon Network (you can change this to Etherscan for Ethereum)
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
@@ -75,6 +77,16 @@ const CryptoWallet = () => {
           >
             View Transaction on Explorer
           </a>
+        </div>
+
+        {/* Go to Home Button */}
+        <div className="text-center mt-6">
+          <button
+            onClick={() => navigate('/')} // Navigate to home page
+            className="inline-block mt-4 px-6 py-2 text-white bg-gray-600 rounded-lg hover:bg-gray-700 focus:outline-none"
+          >
+            Go to Home
+          </button>
         </div>
       </div>
     </div>
