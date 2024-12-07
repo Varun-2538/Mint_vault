@@ -202,6 +202,7 @@ const CONTRACT_ABI = [
 
 // Initialize Ethereum provider and wallet using Ethers.js v6 syntax
 const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
+const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
 console.log("Ethereum provider initialized:", provider);
 
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
@@ -290,6 +291,7 @@ app.get("/gasFees", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch gas fees." });
   }
 });
+
 
 // --------------------- PayU Payment Endpoints ---------------------
 

@@ -14,16 +14,16 @@ const CryptoConverter = () => {
   const [loading, setLoading] = useState(false);
 
   const cryptoOptions = [
-    {
-      id: "ethereum",
-      symbol: "ETH",
-      icon: "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=025",
-    },
-    {
-      id: "matic-network",
-      symbol: "MATIC",
-      icon: "https://cryptologos.cc/logos/polygon-matic-logo.svg?v=025",
-    },
+    // {
+    //   id: "ethereum",
+    //   symbol: "ETH",
+    //   icon: "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=025",
+    // },
+    // {
+    //   id: "matic-network",
+    //   symbol: "MATIC",
+    //   icon: "https://cryptologos.cc/logos/polygon-matic-logo.svg?v=025",
+    // },
     {
       id: "tether",
       symbol: "USDT",
