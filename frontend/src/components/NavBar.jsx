@@ -1,20 +1,95 @@
-import React, { useState } from "react";
-import CustomButton from "./CustomButton";
+import React, { useState, useEffect } from "react";
+import { GoogleLogin } from "@react-oauth/google";
+import { useNavigate } from "react-router-dom";
+import { useOkto } from "okto-sdk-react";
 import { useWallet } from "./WalletContext";
+import CustomButton from "./CustomButton";
 
 export default function Navbar() {
   const [showNavbar, setShowNavbar] = useState(false);
+  const [authToken, setAuthToken] = useState(null);
+  const [error, setError] = useState(null);
 
-  const { walletAddress, connectWallet } = useWallet();
+  const navigate = useNavigate();
+  const { authenticate, createWallet, logOut, showWidgetModal } = useOkto();
+  const { updateWalletAddress, connectWallet, disconnectWallet } = useWallet();
 
+  // Toggle Navbar visibility for mobile
   const handleShowNavbar = () => {
     setShowNavbar(!showNavbar);
   };
 
-  const handleLogin = () => {
-    // Add logic for login here
-    console.log("Login button clicked");
+  // Google Login Handler
+  const handleGoogleLogin = async (credentialResponse) => {
+    try {
+      const idToken = credentialResponse.credential;
+      authenticate(idToken, async (authResponse, error) => {
+        if (authResponse) {
+          console.log("Authentication successful:", authResponse);
+          setAuthToken(authResponse.auth_token);
+
+          // Fetch Wallet Address after login
+          await fetchWalletAddress();
+          setError(null);
+        } else {
+          console.error("Authentication failed:", error);
+          setError("Failed to authenticate.");
+        }
+      });
+    } catch (err) {
+      console.error("Error during login:", err);
+      setError("Login failed.");
+    }
   };
+
+  // Fetch Wallet Address
+  const fetchWalletAddress = async () => {
+    try {
+      const walletData = await createWallet(); // Fetch the wallet
+      if (walletData.wallets && walletData.wallets.length > 0) {
+        const address = walletData.wallets[0].address;
+        updateWalletAddress(address); // Update WalletContext
+      } else {
+        throw new Error("No wallet found");
+      }
+    } catch (error) {
+      console.error("Error fetching wallet address:", error);
+      setError("Failed to fetch wallet address.");
+    }
+  };
+
+  // Logout Handler
+  const handleLogout = async () => {
+    try {
+      await logOut();
+      setAuthToken(null);
+      updateWalletAddress(null); // Clear wallet address from context
+      setError(null);
+      navigate("/");
+    } catch (err) {
+      console.error("Logout failed:", err);
+      setError("Failed to log out.");
+    }
+  };
+
+  // Disconnect Wallet Handler
+  const handleDisconnectWallet = async () => {
+    try {
+      await disconnectWallet(); // Disconnect Ethereum wallet
+      updateWalletAddress(null); // Clear wallet address from context
+      console.log("Wallet disconnected");
+    } catch (err) {
+      console.error("Error disconnecting wallet:", err);
+      setError("Failed to disconnect wallet.");
+    }
+  };
+
+  // Automatically fetch wallet address if logged in via Google
+  useEffect(() => {
+    if (authToken) {
+      fetchWalletAddress();
+    }
+  }, [authToken]);
 
   return (
     <nav className="w-9/12 xl:w-11/12 2xl:w-9/12 z-50 h-16 rounded-[60px] px-6 py-4 xl:py-2 bg-white backdrop-blur-xl shadow-xl border-stone-50 border-1 mx-auto mt-4 mb-16 fixed left-1/2 -translate-x-1/2">
@@ -54,23 +129,46 @@ export default function Navbar() {
               Staking
             </a>
           </li>
-          {/* <li>
-            <CustomButton
-              primaryText={walletAddress ? "Connected" : "Connect Wallet"}
-              onClick={connectWallet}
-            />
-          </li> */}
+          {/* Display Google Login or Logout Button */}
+          <li>
+            {!authToken ? (
+              <GoogleLogin
+                onSuccess={handleGoogleLogin}
+                onError={() => console.error("Google Login Failed")}
+              />
+            ) : (
+              <CustomButton primaryText="Logout" onClick={handleLogout} />
+            )}
+          </li>
+          {/* Connect Wallet Button */}
           <li>
             <CustomButton
-              primaryText="Login"
-              onClick={handleLogin}
+              primaryText={!authToken ? "Connect Wallet" : "Disconnect Wallet"}
+              onClick={!authToken ? connectWallet : handleDisconnectWallet}
             />
           </li>
+          {/* Show Widget Button */}
           <li>
-            <div className="bg-divider h-2/3 mx-6 hidden max-[1024px]:hidden"></div>
+            <CustomButton
+              primaryText="Widget"
+              onClick={() => showWidgetModal()}
+            />
+          </li>
+          {/* Link to Wallet Manager */}
+          <li>
+            <CustomButton
+              primaryText="Manage Wallet"
+              onClick={() => navigate("/wallet-manager")}
+            />
           </li>
         </ul>
       </div>
+      {/* Display Error */}
+      {error && (
+        <div style={{ color: "red", textAlign: "center", marginTop: "10px" }}>
+          <p>{error}</p>
+        </div>
+      )}
     </nav>
   );
 }

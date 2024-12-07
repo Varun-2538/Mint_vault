@@ -5,6 +5,7 @@ const WalletContext = createContext();
 export const WalletProvider = ({ children }) => {
   const [walletAddress, setWalletAddress] = useState(null);
 
+  // Connect Ethereum Wallet
   const connectWallet = async () => {
     console.log("Connect Wallet button clicked");
     if (typeof window.ethereum !== "undefined") {
@@ -23,12 +24,27 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
+  // Disconnect Wallet
+  const disconnectWallet = async () => {
+    console.log("Disconnect Wallet button clicked");
+    setWalletAddress(null); // Reset wallet address to null
+    alert("Wallet disconnected successfully.");
+  };
+
+  // Update Wallet Address (used by external components like Navbar)
+  const updateWalletAddress = (address) => {
+    setWalletAddress(address);
+    console.log("Wallet address updated:", address);
+  };
 
   return (
-    <WalletContext.Provider value={{ walletAddress, connectWallet }}>
+    <WalletContext.Provider
+      value={{ walletAddress, connectWallet, disconnectWallet, updateWalletAddress }}
+    >
       {children}
     </WalletContext.Provider>
   );
 };
 
+// Hook to use Wallet Context
 export const useWallet = () => useContext(WalletContext);
