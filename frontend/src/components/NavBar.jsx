@@ -1,19 +1,87 @@
-import React, { useState } from "react";
-import CustomButton from "./CustomButton";
+import React, { useState, useEffect } from "react";
+import { GoogleLogin } from "@react-oauth/google";
+import { useNavigate } from "react-router-dom";
+import { useOkto } from "okto-sdk-react";
 import { useWallet } from "./WalletContext";
+import CustomButton from "./CustomButton";
 
 export default function Navbar() {
   const [showNavbar, setShowNavbar] = useState(false);
+  const [authToken, setAuthToken] = useState(null);
+  const [error, setError] = useState(null);
 
-  const { walletAddress, connectWallet } = useWallet();
+  const navigate = useNavigate();
+  const { authenticate, createWallet, logOut, showWidgetModal } = useOkto();
+  const { walletAddress, updateWalletAddress, connectWallet, disconnectWallet } = useWallet();
 
+  // Toggle Navbar visibility for mobile
   const handleShowNavbar = () => {
     setShowNavbar(!showNavbar);
   };
 
-  const handleLogin = () => {
-    // Add logic for login here
-    console.log("Login button clicked");
+  // Google Login Handler
+  const handleGoogleLogin = async (credentialResponse) => {
+    try {
+      const idToken = credentialResponse.credential;
+      authenticate(idToken, async (authResponse, error) => {
+        if (authResponse) {
+          console.log("Authentication successful:", authResponse);
+          setAuthToken(authResponse.auth_token);
+
+          // Fetch Wallet Address after login
+          await fetchGoogleWalletAddress();
+          setError(null);
+        } else {
+          console.error("Authentication failed:", error);
+          setError("Failed to authenticate.");
+        }
+      });
+    } catch (err) {
+      console.error("Error during login:", err);
+      setError("Login failed.");
+    }
+  };
+
+  // Fetch Wallet Address from Google authentication
+  const fetchGoogleWalletAddress = async () => {
+    try {
+      const walletData = await createWallet();
+      if (walletData.wallets && walletData.wallets.length > 0) {
+        const googleWalletAddress = walletData.wallets[0].address;
+        updateWalletAddress(googleWalletAddress); // Sync with context
+      } else {
+        throw new Error("No wallet found");
+      }
+    } catch (error) {
+      console.error("Error fetching wallet address:", error);
+      setError("Failed to fetch wallet address.");
+    }
+  };
+
+  // Logout Handler
+  const handleLogout = async () => {
+    try {
+      await logOut();
+      setAuthToken(null);
+      updateWalletAddress(null); // Clear wallet address in context
+      setError(null);
+      navigate("/");
+    } catch (err) {
+      console.error("Logout failed:", err);
+      setError("Failed to log out.");
+    }
+  };
+
+  // Disconnect Wallet Handler
+  const handleDisconnectWallet = async () => {
+    try {
+      await disconnectWallet(); // Disconnect Ethereum wallet
+      updateWalletAddress(null); // Clear wallet address in context
+      console.log("Wallet disconnected");
+    } catch (err) {
+      console.error("Error disconnecting wallet:", err);
+      setError("Failed to disconnect wallet.");
+    }
   };
 
   return (
@@ -25,11 +93,7 @@ export default function Navbar() {
         </div>
 
         {/* Navigation Links */}
-        <ul
-          className={`flex items-center gap-8 ${
-            showNavbar ? "active" : ""
-          }`}
-        >
+        <ul className={`flex items-center gap-8 ${showNavbar ? "active" : ""}`}>
           <li>
             <a
               className="font-medium text-lg cursor-pointer text-blue-700 hover:text-cyan-900"
@@ -46,23 +110,62 @@ export default function Navbar() {
               Staking
             </a>
           </li>
+          {/* Display Google Login or Wallet Details */}
+          <li>
+            {!authToken ? (
+              <GoogleLogin
+                onSuccess={handleGoogleLogin}
+                onError={() => console.error("Google Login Failed")}
+              />
+            ) : (
+              <div className="flex flex-col items-center">
+                {walletAddress ? (
+                  <p className="font-medium text-lg text-green-700">
+                    Wallet: {walletAddress}
+                  </p>
+                ) : (
+                  <p>Fetching Wallet...</p>
+                )}
+                <CustomButton primaryText="Logout" onClick={handleLogout} />
+              </div>
+            )}
+          </li>
+          {/* Connect Wallet Button */}
+          <li>
+            {!walletAddress ? (
+              <CustomButton
+                primaryText="Connect Wallet"
+                onClick={connectWallet}
+              />
+            ) : (
+              <CustomButton
+                primaryText="Disconnect Wallet"
+                onClick={handleDisconnectWallet}
+              />
+            )}
+          </li>
+          {/* Show Widget Button */}
           <li>
             <CustomButton
-              primaryText={walletAddress ? "Connected" : "Connect Wallet"}
-              onClick={connectWallet}
+              primaryText="Widget"
+              onClick={() => showWidgetModal()}
             />
           </li>
+          {/* Link to Wallet Manager */}
           <li>
             <CustomButton
-              primaryText="Login"
-              onClick={handleLogin}
+              primaryText="Manage Wallet"
+              onClick={() => navigate("/wallet-manager")}
             />
-          </li>
-          <li>
-            <div className="bg-divider h-2/3 mx-6 hidden max-[1024px]:hidden"></div>
           </li>
         </ul>
       </div>
+      {/* Display Error */}
+      {error && (
+        <div style={{ color: "red", textAlign: "center", marginTop: "10px" }}>
+          <p>{error}</p>
+        </div>
+      )}
     </nav>
   );
 }
