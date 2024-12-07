@@ -1,18 +1,22 @@
 import React, { useState } from "react";
+import CustomButton from "./CustomButton";
+import { useWallet } from "./WalletContext";
 
 export default function Navbar() {
   const [showNavbar, setShowNavbar] = useState(false);
+
+  const { walletAddress, connectWallet } = useWallet();
 
   const handleShowNavbar = () => {
     setShowNavbar(!showNavbar);
   };
 
   return (
-    <nav className="w-9/12 xl:w-11/12 2xl:w-9/12 z-50 h-16 rounded-[60px] px-6 py-4 xl:py-2 bg-slate-900 backdrop-blur-sm shadow-lg mx-auto mt-4 mb-16 fixed left-1/2 -translate-x-1/2">
+    <nav className="w-9/12 xl:w-11/12 2xl:w-9/12 z-50 h-16 rounded-[60px] px-6 py-4 xl:py-2 bg-white backdrop-blur-xl shadow-xl border-stone-50 border-1 mx-auto mt-4 mb-16 fixed left-1/2 -translate-x-1/2">
       <div className="flex justify-between items-center h-full">
         {/* Logo Section */}
         <div className="flex items-center">
-          <a className="pl-4 font-bold text-2xl text-white">Defy</a>
+          <a className="pl-4 font-extrabold text-2xl text-blue-700 font-serif">MV</a>
         </div>
 
         {/* Navigation Links */}
@@ -23,44 +27,30 @@ export default function Navbar() {
         >
           <li>
             <a
-              className="font-medium text-base cursor-pointer text-gray-300 hover:text-white"
+              className="font-medium text-lg cursor-pointer text-blue-700 hover:text-cyan-900"
               href="#"
             >
-              Quest
+              Liquidity Pool
             </a>
           </li>
           <li>
             <a
-              className="font-medium text-base cursor-pointer text-gray-300 hover:text-white"
+              className="font-medium text-lg cursor-pointer text-blue-700 hover:text-cyan-900"
               href="#"
             >
-              Leaderboard
+              Staking
             </a>
           </li>
           <li>
-            <a
-              className="font-medium text-base cursor-pointer text-gray-300 hover:text-white"
-              href="#"
-            >
-              FAQ
-            </a>
+            <CustomButton
+                primaryText={walletAddress ? "Connected" : "Connect Wallet"}
+                onClick={connectWallet}
+            />
+
           </li>
-          <li>
-            <div className="flex items-center cursor-pointer">
-              <p className="font-medium text-base pr-1 text-gray-300 hover:text-white">
-                Daily Rewards
-              </p>
-            </div>
-          </li>
+          
           <li>
             <div className="bg-divider h-2/3 mx-6 hidden max-[1024px]:hidden"></div>
-          </li>
-          <li>
-            <div className="p-2 rounded-full bg-gray-800 bg-opacity-60 flex max-h-10 cursor-pointer">
-              <p className="font-medium text-sm text-gray-300 hover:text-white">
-                100 Coins
-              </p>
-            </div>
           </li>
         </ul>
       </div>
