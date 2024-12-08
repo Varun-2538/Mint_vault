@@ -62,9 +62,8 @@
 
 	// Load environment variables for Ethereum
 	const RPC_URL = process.env.RPC_URL || "https://rpc-amoy.polygon.technology/"; // Replace with your desired RPC URL
-	const PRIVATE_KEY =
-	process.env.PRIVATE_KEY ||
-	"a4b7bb5c524e0431096859ec12606ef298bb517dae0a8939af8b1346f856abb4"; // Ensure this is securely stored
+	const PRIVATE_KEY = process.env.PRIVATE_KEY || "";
+	// Ensure this is securely stored
 	const CONTRACT_ADDRESS =
 	process.env.CONTRACT_ADDRESS || "0x1b675F19c627b85D6C486109A726C68410840934"; // Replace with your deployed contract address
 
