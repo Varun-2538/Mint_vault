@@ -1,53 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useAnimation } from 'framer-motion';
-import { BarChart2 } from 'lucide-react';
+import { User, Coins, IndianRupee, CreditCard, TrendingUp } from 'lucide-react';
 
 import {
   Card,
   CardContent,
-  CardHeader,
+  CardHeader,          
   CardTitle,
   CardDescription,
 } from './Card';
-
-import { Wallet, Handshake, MessageSquare, Coins } from 'lucide-react';
 
 export const Timeline = () => {
   const [scrollY, setScrollY] = useState(0);
   const controls = useAnimation();
 
   const stages = [
-    {
-      id: 1,
-      title: 'Connect Wallet',
-      description: 'Connect your wallet to start cross-chain lending & borrowing.',
-      icon: <Wallet className="h-6 w-6" />,
-    },
-    {
-      id: 2,
-      title: 'Lend',
-      description: 'Deposit your assets on any chain to start earning dynamic APY rewards.',
-      icon: <Coins className="h-6 w-6" />,
-    },
-    {
-      id: 3,
-      title: 'Borrow',
-      description: 'Leverage up to 80% of your liquidity to borrow seamlessly across multi chains.',
-      icon: <Handshake className="h-6 w-6" />,
-    },
-    {
-      id: 4,
-      title: 'Analyze',
-      description: 'Use detailed analytics to track your positions for better decision-making.',
-      icon: <BarChart2 className="h-6 w-6" />,
-    },
-    {
-      id: 5,
-      title: 'Provide Feedback',
-      description: 'Share your thoughts to help us enhance your experience with APY-LO.',
-      icon: <MessageSquare className="h-6 w-6" />,
-    },
-  ];
+  {
+    id: 1,
+    title: 'Sign In and Get a Wallet',
+    description: 'Sign in with Google to instantly create a secure wallet powered by Okto SDK.',
+    icon: <User className="h-6 w-6" />,
+  },
+  {
+    id: 2,
+    title: 'Select Your Token',
+    description: 'Choose the crypto token you want from our extensive list of supported tokens.',
+    icon: <Coins className="h-6 w-6" />,
+  },
+  {
+    id: 3,
+    title: 'Enter INR Amount',
+    description: 'Input the INR amount to instantly convert it into your selected crypto token.',
+    icon: <IndianRupee className="h-6 w-6" />,
+  },
+  {
+    id: 4,
+    title: 'Pay with UPI',
+    description: 'Complete the payment via UPI and receive your crypto directly in your wallet.',
+    icon: <CreditCard className="h-6 w-6" />,
+  },
+  {
+    id: 5,
+    title: 'Stake and Earn',
+    description: 'Stake your MV tokens to earn annual rewards and swap them for other tokens later.',
+    icon: <TrendingUp className="h-6 w-6" />,
+  },
+];
 
   useEffect(() => {
     const handleScroll = () => {

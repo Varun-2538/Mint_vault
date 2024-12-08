@@ -6,6 +6,7 @@ import ReadData from "./components/ReadData";
 import { OktoProvider, BuildType } from "okto-sdk-react";
 import WalletManager from "./components/WalletManager";
 import { WalletProvider } from "./components/WalletContext"; // Import WalletProvider
+import StakingComponent from "./components/StakingComponent";
 import "./index.css";
 
 const OKTO_CLIENT_API_KEY = process.env.REACT_APP_OKTO_CLIENT_API_KEY;
@@ -60,6 +61,7 @@ function App() {
                   />
                 }
               />
+              <Route path="/staking" element={<StakingComponent />} />
             </Routes>
           </WalletProvider>
         </div>

@@ -12,6 +12,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "./Car
 import { Link, ChartLine, SquarePercent } from 'lucide-react';
 import { useWallet } from "./WalletContext";
 import { motion } from 'framer-motion';
+import Footer from "./Footer";
 
 function HomePage() {
   const { connectWallet, disconnectWallet, updateWalletAddress } = useWallet();
@@ -21,24 +22,24 @@ function HomePage() {
   const [error, setError] = useState(null);
   const cardDetails = [
     {
-      title: 'Cross-Chain Flexibility',
+      title: 'Instant Wallet Creation',
       description: '',
       content:
-        'Lend assets on Chain X and borrow on Chains Y, Z, and A with up to 80% liquidity.',
+        'Sign in with Google and get your wallet instantly with our seamless Okto SDK integration. No setup hassles, just start your crypto journey',
       icon: <Link className="h-8 w-8" />,
     },
     {
-      title: 'Dynamic APY Optimization',
+      title: 'Easy INR to Crypto Swaps',
       description: '',
       content:
-        'Experience interest rates that adjust based on pool liquidity for maximum returns.',
+        'Deposit INR and instantly receive crypto from our secure liquidity pool. Fast, reliable, and user-focused for effortless trading.',
       icon: <SquarePercent className="h-8 w-8" />,
     },
     {
-      title: 'Interactive APY Estimator',
+      title: 'Stake and Earn with MV Token',
       description: '',
       content:
-        'Visualize and play with APY trends using our "Estimate APY" graphs for smarter decisions.',
+        'Grow your assets by staking MV tokens with annual growth rates. Swap them later with any token on our platform for maximum flexibility.',
       icon: <ChartLine className="h-8 w-8" />,
     },
   ];
@@ -177,24 +178,15 @@ function HomePage() {
               <div className="flex flex-col">
                 <h1 className="text-6xl text-black font-bold mb-4">
                   <span className="mb-1 block">Seamless UPI to Crypto</span>
-                  <span className="text-4xl font-bold text-violet-800 animate-slide">
+                  <span className="text-4xl mb-1 font-bold text-black">One Click, One Wallet – Powered by <span className="text-blue-800">Okto SDK .</span></span>
+                  <br />
+                  <span className="text-3xl font-bold text-violet-800 animate-slide">
                     Convert, Stake, Prosper⚡
                   </span>
                   
                 </h1>
-                {!authToken ? ( 
-                  <GoogleLogin 
-                    className="w-full mt-8 bg-violet-400 hover:bg-violet-500" // Allow custom width and additional classes
-                    onSuccess={handleGoogleLogin} 
-                    onError={() => console.error("Google Login Failed")}
-                    text="Continue with Google" // Customize button text
-                    theme="filled_blue" // Customize theme
-                    size="large" // Customize size
-                    width="200px" // Set specific width if needed
-                  /> 
-                  ) : ( 
-                    <CustomButton primaryText="Logout" onClick={handleLogout} /> 
-                )}
+                
+                
               </div>
               
 
@@ -205,28 +197,7 @@ function HomePage() {
               >
                 <CryptoConverter />
               </section>
-              <button
-                onClick={handleScroll}
-                className="absolute bottom-10 flex items-center justify-center group"
-              >
-                <span className="text-black text-lg mb-2">Scroll Down</span>
-                <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-lg group-hover:bg-gray-200 transition">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                    stroke="currentColor"
-                    className="w-6 h-6 text-gray-800 group-hover:text-black transition"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
-              </button>
+              
             </div>
           </div>
         </div>
@@ -280,7 +251,7 @@ function HomePage() {
         </div>
 
         {/* Timeline Section */}
-        <div className="relative min-h-screen w-full bg-lime-50 overflow-hidden mt-36 ml-24 mr-24">
+        <div className="relative min-h-screen justify-center items-center w-full bg-lime-50 overflow-hidden mt-36 ml-24 mr-24">
           <Timeline stages={content} />
         </div>
 
@@ -319,6 +290,7 @@ function HomePage() {
             </div>
           </div>
         )}
+        <Footer />
       </div>
     </WalletProvider>
   );
