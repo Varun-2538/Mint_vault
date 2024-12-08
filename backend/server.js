@@ -23,41 +23,40 @@
 	app.use(bodyParser.json()); // Parse JSON payloads
 	app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded form data
 
-// Optional: Increase the body parser size limit if the payloads are large
-app.use(bodyParser.urlencoded({ extended: true, limit: "1mb" }));
+	// Optional: Increase the body parser size limit if the payloads are large
+	app.use(bodyParser.urlencoded({ extended: true, limit: "1mb" }));
 
-let cachedRates = null; // Cache for API response
-let lastFetchTime = 0; // Time of the last fetch
-const CACHE_DURATION = 60000; // Cache duration (60 seconds)
+	let tempPaymentData = {};  // Temporary store for wallet address and amount
 
-// Add more robust error handling in the crypto prices endpoint
-app.get("/crypto-prices", async (req, res) => {
-  const { ids } = req.query;
+	let cachedRates = null; // Cache for API response
+	let lastFetchTime = 0; // Time of the last fetch
+	const CACHE_DURATION = 60000; // Cache duration (60 seconds)
 
-  if (!ids) {
-    return res.status(400).json({ error: "Missing 'ids' parameter" });
-  }
+	app.get("/crypto-prices", async (req, res) => {
+	const { ids } = req.query;
 
-  try {
-    const response = await axios.get(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=inr`,
-      {
-        headers: {
-          'User-Agent': 'YourAppName/1.0', // Good practice for API requests
-          'Accept': 'application/json'
-        },
-        timeout: 5000 // 5 second timeout
-      }
-    );
-    res.json(response.data);
-  } catch (error) {
-    console.error("Detailed error fetching crypto prices:", error.response?.data || error.message);
-    res.status(500).json({ 
-      error: "Failed to fetch crypto prices", 
-      details: error.message 
-    });
-  }
-});
+	if (!ids) {
+		return res.status(400).json({ error: "Missing 'ids' parameter" });
+	}
+
+	const currentTime = Date.now();
+	if (cachedRates && currentTime - lastFetchTime < CACHE_DURATION) {
+		console.log("Serving from cache");
+		return res.json(cachedRates); // Return cached response
+	}
+
+	try {
+		const response = await axios.get(
+		`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=inr`
+		);
+		cachedRates = response.data; // Update cache
+		lastFetchTime = currentTime; // Update last fetch time
+		res.json(response.data);
+	} catch (error) {
+		console.error("Error fetching crypto prices:", error.message);
+		res.status(500).json({ error: "Failed to fetch crypto prices" });
+	}
+	});
 
 	// --------------------- Ethereum Smart Contract Configuration ---------------------
 
@@ -65,7 +64,7 @@ app.get("/crypto-prices", async (req, res) => {
 	const RPC_URL = process.env.RPC_URL || "https://rpc-amoy.polygon.technology/"; // Replace with your desired RPC URL
 	const PRIVATE_KEY =
 	process.env.PRIVATE_KEY ||
-	; // Ensure this is securely stored
+	"a4b7bb5c524e0431096859ec12606ef298bb517dae0a8939af8b1346f856abb4"; // Ensure this is securely stored
 	const CONTRACT_ADDRESS =
 	process.env.CONTRACT_ADDRESS || "0x1b675F19c627b85D6C486109A726C68410840934"; // Replace with your deployed contract address
 
@@ -589,4 +588,3 @@ app.post("/success", async (req, res) => {
 	app.listen(PORT, () => {
 	console.log(`Server running on http://localhost:${PORT}`);
 	});
-
