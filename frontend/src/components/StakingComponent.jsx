@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Navbar from "./NavBar";
+import { StakeToken } from "./StakeToken";
 
 const StakingComponent = () => {
   const [walletAddress, setWalletAddress] = useState("");
@@ -21,6 +22,7 @@ const StakingComponent = () => {
   return (
     <>
       <Navbar />
+      <StakeToken />
       <div className="w-full min-h-screen flex justify-center items-center bg-lime-50 ">
         
         <div className="p-6  bg-white backdrop-blur-lg text-black rounded-xl shadow-xl  border-violet-600 border-2 glassmorphism shadow-blue-500/50  w-4/5">
