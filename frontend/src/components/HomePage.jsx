@@ -1,18 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from 'react-router-dom';
-import { Routes, Route } from "react-router-dom";
-import { GoogleLogin } from "@react-oauth/google";
-import CryptoConverter from "./CryptoConverter";
-import { WalletProvider } from "./WalletContext";
 import { useOkto } from "okto-sdk-react";
-import CustomButton from "./CustomButton";
+import { Link, ChartLine, SquarePercent } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+import { WalletProvider, useWallet } from "./WalletContext";
+import CryptoConverter from "./CryptoConverter";
 import Navbar from "./NavBar";
 import Timeline from "./Timeline";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "./Card";
-import { Link, ChartLine, SquarePercent } from 'lucide-react';
-import { useWallet } from "./WalletContext";
-import { motion } from 'framer-motion';
 import Footer from "./Footer";
+import { Card, CardHeader, CardTitle, CardContent } from "./Card";
 
 function HomePage() {
   const { connectWallet, disconnectWallet, updateWalletAddress } = useWallet();
@@ -59,52 +56,61 @@ function HomePage() {
 
   return (
     <WalletProvider>
-      <div className="relative min-h-screen bg-lime-50 w-full overflow-hidden">
+      <div className="relative min-h-screen bg-lime-50 w-full overflow-x-hidden">
         <Navbar />
 
-        {/* Add gap between Navbar and Main Content */}
-        <div className="h-16 mt-48"></div>
-
-        <div className="flex flex-col lg:flex-row items-center w-full px-6 lg:px-24">
-          <div className="text-center lg:text-left lg:w-1/2">
-            <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-              Seamless UPI to Crypto
-              <br />
-              <span className="text-2xl lg:text-4xl text-blue-800">Powered by Okto SDK.</span>
-            </h1>
-            <p className="text-lg lg:text-xl text-violet-800">Convert, Stake, Prosper ⚡</p>
-          </div>
-          <div id="target-section" className="w-full lg:w-1/2 mt-10 lg:mt-0">
-            <CryptoConverter />
+        {/* Hero Section */}
+        <div className="container mx-auto px-4 pt-24 pb-16 lg:pt-32 lg:pb-24">
+          <div className="flex flex-col lg:flex-row items-center justify-between space-y-12 lg:space-y-0 lg:space-x-12">
+            <div className="text-center lg:text-left lg:w-1/2 space-y-6">
+              <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold">
+                Seamless UPI to Crypto
+                <br />
+                <span className="text-2xl lg:text-4xl text-blue-800">Powered by Okto SDK</span>
+              </h1>
+              <p className="text-lg lg:text-xl text-violet-800">Convert, Stake, Prosper ⚡</p>
+            </div>
+            <div className="w-full lg:w-1/2">
+              <CryptoConverter />
+            </div>
           </div>
         </div>
 
         {/* Key Features Section */}
-        <div
-          className="relative w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 mt-16 py-20 lg:py-32 px-8 lg:px-32"
-        >
-          <motion.section
-            className="flex flex-col items-center justify-center gap-y-16"
+        <div className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 py-16 lg:py-24">
+          <motion.section 
+            className="container mx-auto px-4"
             initial="hidden"
             animate="visible"
             variants={containerVariants}
           >
-            <p className="text-3xl lg:text-5xl font-semibold text-app-purple border-b-2 border-dashed border-app-slate">
-              Key Features
-            </p>
-            <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10" variants={containerVariants}>
+            <div className="text-center mb-16">
+              <p className="text-3xl lg:text-5xl font-semibold text-white border-b-2 border-dashed border-white/30 pb-4 inline-block">
+                Key Features
+              </p>
+            </div>
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              variants={containerVariants}
+            >
               {cardDetails.map((card, index) => (
                 <motion.div
                   key={index}
-                  className="relative w-full h-auto"
                   variants={cardVariants}
+                  className="flex justify-center"
                 >
-                  <Card className="relative rounded-xl shadow-md h-96 p-6">
-                    <CardHeader>
-                      <span className="absolute top-4 left-4 rounded-lg bg-white p-2">{card.icon}</span>
-                      <CardTitle className="text-center font-bold mt-16 text-xl">{card.title}</CardTitle>
+                  <Card className="w-full max-w-sm h-full rounded-xl shadow-lg p-6 bg-white">
+                    <CardHeader className="relative pb-4">
+                      <div className="absolute -top-[80px] left-1/4 transform -translate-x-1/2 rounded-lg bg-blue-50 p-3">
+                        {card.icon}
+                      </div>
+                      <CardTitle className="text-center font-bold mt-8 text-xl pt-4">
+                        {card.title}
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent className="text-center text-sm mt-6">{card.content}</CardContent>
+                    <CardContent className="text-center text-sm mt-2">
+                      {card.content}
+                    </CardContent>
                   </Card>
                 </motion.div>
               ))}
@@ -112,7 +118,8 @@ function HomePage() {
           </motion.section>
         </div>
 
-        <div className="px-6 lg:px-24 mt-24">
+        {/* Timeline Section */}
+        <div className="container mx-auto px-4 py-16 lg:py-24">
           <Timeline stages={[{ title: "Stage 1", description: "Details about stage 1" }]} />
         </div>
 
