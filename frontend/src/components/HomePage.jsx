@@ -20,92 +20,27 @@ function HomePage() {
   const { getUserDetails, authenticate, createWallet, logOut, showWidgetModal } = useOkto();
   const [authToken, setAuthToken] = useState(null);
   const [error, setError] = useState(null);
+
   const cardDetails = [
     {
       title: 'Instant Wallet Creation',
       description: '',
-      content:
-        'Sign in with Google and get your wallet instantly with our seamless Okto SDK integration. No setup hassles, just start your crypto journey',
+      content: 'Sign in with Google and get your wallet instantly with our seamless Okto SDK integration. No setup hassles, just start your crypto journey',
       icon: <Link className="h-8 w-8" />,
     },
     {
       title: 'Easy INR to Crypto Swaps',
       description: '',
-      content:
-        'Deposit INR and instantly receive crypto from our secure liquidity pool. Fast, reliable, and user-focused for effortless trading.',
+      content: 'Deposit INR and instantly receive crypto from our secure liquidity pool. Fast, reliable, and user-focused for effortless trading.',
       icon: <SquarePercent className="h-8 w-8" />,
     },
     {
       title: 'Stake and Earn with MV Token',
       description: '',
-      content:
-        'Grow your assets by staking MV tokens with annual growth rates. Swap them later with any token on our platform for maximum flexibility.',
+      content: 'Grow your assets by staking MV tokens with annual growth rates. Swap them later with any token on our platform for maximum flexibility.',
       icon: <ChartLine className="h-8 w-8" />,
     },
   ];
-
-  const handleGoogleLogin = async (credentialResponse) => {
-    try {
-      const idToken = credentialResponse.credential;
-      authenticate(idToken, async (authResponse, error) => {
-        if (authResponse) {
-          console.log("Authentication successful:", authResponse);
-          setAuthToken(authResponse.auth_token);
-
-          // Fetch Wallet Address after login
-          await fetchWalletAddress();
-          setError(null);
-        } else {
-          console.error("Authentication failed:", error);
-          setError("Failed to authenticate.");
-        }
-      });
-    } catch (err) {
-      console.error("Error during login:", err);
-      setError("Login failed.");
-    }
-  };
-
-  const fetchWalletAddress = async () => {
-    try {
-      const walletData = await createWallet(); // Fetch the wallet
-      if (walletData.wallets && walletData.wallets.length > 0) {
-        const address = walletData.wallets[0].address;
-        updateWalletAddress(address); // Update WalletContext
-      } else {
-        throw new Error("No wallet found");
-      }
-    } catch (error) {
-      console.error("Error fetching wallet address:", error);
-      setError("Failed to fetch wallet address.");
-    }
-  };
-
-  // Logout Handler
-  const handleLogout = async () => {
-    try {
-      await logOut();
-      setAuthToken(null);
-      updateWalletAddress(null); // Clear wallet address from context
-      setError(null);
-      navigate("/");
-    } catch (err) {
-      console.error("Logout failed:", err);
-      setError("Failed to log out.");
-    }
-  };
-
-
-  const handleDisconnectWallet = async () => {
-    try {
-      await disconnectWallet(); // Disconnect Ethereum wallet
-      updateWalletAddress(null); // Clear wallet address from context
-      console.log("Wallet disconnected");
-    } catch (err) {
-      console.error("Error disconnecting wallet:", err);
-      setError("Failed to disconnect wallet.");
-    }
-  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -122,127 +57,54 @@ function HomePage() {
     visible: { opacity: 1, y: 0, transition: { duration: 1 } },
   };
 
-  const content = [
-    {
-      title: "First Title",
-      description: "First description",
-      content: <div>First content</div>
-    },
-    {
-      title: "Second Title",
-      description: "Second description",
-      content: <div>Second content</div>
-    },
-    {
-      title: "First Title",
-      description: "First description",
-      content: <div>First content</div>
-    },
-    {
-      title: "Second Title",
-      description: "Second description",
-      content: <div>Second content</div>
-    },
-  ];
-
-  const handleScroll = () => {
-    const target = document.getElementById("target-section");
-    if (target) {
-      target.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalContent, setModalContent] = useState(null);
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setModalContent(null); // Reset modal content
-  };
-
-  const openModal = (content) => {
-    setModalContent(content);
-    setIsModalOpen(true);
-  };
-
   return (
     <WalletProvider>
       <div className="relative min-h-screen bg-lime-50 w-full overflow-hidden">
-        {/* Main Content */}
-        <div className="flex min-h-screen w-full pb-4">
-          <Navbar />
-          <div className="flex flex-col w-full mt-36 ml-24 mr-24">
-            {/* Main Row Container */}
-            <div className="flex w-full items-center justify-between">
-              {/* Left-Aligned Header */}
-              <div className="flex flex-col">
-                <h1 className="text-6xl text-black font-bold mb-4">
-                  <span className="mb-1 block">Seamless UPI to Crypto</span>
-                  <span className="text-4xl mb-1 font-bold text-black">One Click, One Wallet – Powered by <span className="text-blue-800">Okto SDK .</span></span>
-                  <br />
-                  <span className="text-3xl font-bold text-violet-800 animate-slide">
-                    Convert, Stake, Prosper⚡
-                  </span>
-                  
-                </h1>
-                
-                
-              </div>
-              
+        <Navbar />
 
-              {/* Right-Aligned CryptoConverter */}
-              <section
-                id="target-section"
-                className="text-white text-center flex flex-col items-end"
-              >
-                <CryptoConverter />
-              </section>
-              
-            </div>
+        {/* Add gap between Navbar and Main Content */}
+        <div className="h-16 mt-48"></div>
+
+        <div className="flex flex-col lg:flex-row items-center w-full px-6 lg:px-24">
+          <div className="text-center lg:text-left lg:w-1/2">
+            <h1 className="text-4xl lg:text-6xl font-bold mb-6">
+              Seamless UPI to Crypto
+              <br />
+              <span className="text-2xl lg:text-4xl text-blue-800">Powered by Okto SDK.</span>
+            </h1>
+            <p className="text-lg lg:text-xl text-violet-800">Convert, Stake, Prosper ⚡</p>
+          </div>
+          <div id="target-section" className="w-full lg:w-1/2 mt-10 lg:mt-0">
+            <CryptoConverter />
           </div>
         </div>
 
-        {/* Section with Key Features */}
+        {/* Key Features Section */}
         <div
-          className="relative h-[80vh] w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 overflow-hidden mt-12 px-24"
+          className="relative w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 mt-16 py-20 lg:py-32 px-8 lg:px-32"
         >
           <motion.section
-            className="flex flex-col items-center justify-center gap-y-16 px-10 h-full"
+            className="flex flex-col items-center justify-center gap-y-16"
             initial="hidden"
             animate="visible"
             variants={containerVariants}
           >
-            <p className="text-5xl font-semibold border-b-2 border-dashed border-app-slate p-2 text-app-purple">
+            <p className="text-3xl lg:text-5xl font-semibold text-app-purple border-b-2 border-dashed border-app-slate">
               Key Features
             </p>
-            <motion.div
-              className="flex items-center justify-center gap-x-10 flex-wrap"
-              variants={containerVariants}
-            >
+            <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10" variants={containerVariants}>
               {cardDetails.map((card, index) => (
                 <motion.div
                   key={index}
-                  className="relative"
+                  className="relative w-full h-auto"
                   variants={cardVariants}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, amount: 0.2 }} // Animate when 20% of the card is in view
                 >
-                  <Card className="relative w-96 h-80 rounded-xl border-app-violet shadow-md border-r-4 border-b-4">
+                  <Card className="relative rounded-xl shadow-md h-96 p-6">
                     <CardHeader>
-                      <span className="-mt-4 ml-4 absolute rounded-lg bg-white">{card.icon}</span>
-                      <CardTitle className="text-xl text-center flex flex-col justify-center pt-8 font-bold text-blue-800">
-                        {card.title}
-                      </CardTitle>
-                      <CardDescription className="mt-10 text-lg text-black text-app-violet">
-                        {card.description}
-                      </CardDescription>
+                      <span className="absolute top-4 left-4 rounded-lg bg-white p-2">{card.icon}</span>
+                      <CardTitle className="text-center font-bold mt-16 text-xl">{card.title}</CardTitle>
                     </CardHeader>
-                    <div className="mx-6 bg-app-charteuse h-48 rounded-xl">
-                      <CardContent className="p-3 text-center flex flex-col text-lg text-black justify-center py-6">
-                        <p>{card.content}</p>
-                      </CardContent>
-                    </div>
+                    <CardContent className="text-center text-sm mt-6">{card.content}</CardContent>
                   </Card>
                 </motion.div>
               ))}
@@ -250,46 +112,10 @@ function HomePage() {
           </motion.section>
         </div>
 
-        {/* Timeline Section */}
-        <div className="relative min-h-screen justify-center items-center w-full bg-lime-50 overflow-hidden mt-36 ml-24 mr-24">
-          <Timeline stages={content} />
+        <div className="px-6 lg:px-24 mt-24">
+          <Timeline stages={[{ title: "Stage 1", description: "Details about stage 1" }]} />
         </div>
 
-        <Routes>{/* Add routes if needed */}</Routes>
-
-        {/* Modal */}
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-lg w-96 max-w-full shadow-lg">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">
-                  {modalContent === "wallets" ? "Wallets" : "User Details"}
-                </h2>
-                <button
-                  onClick={handleModalClose}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  &times;
-                </button>
-              </div>
-
-              {/* Modal Content */}
-              {modalContent === "wallets" && (
-                <div>
-                  <h3>Wallets:</h3>
-                  {/* Add wallet details here */}
-                </div>
-              )}
-
-              {modalContent === "userDetails" && (
-                <div>
-                  <h3>User Details:</h3>
-                  {/* Add user details here */}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
         <Footer />
       </div>
     </WalletProvider>
