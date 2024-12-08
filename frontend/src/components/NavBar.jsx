@@ -1,44 +1,56 @@
-import React, { useState, useEffect } from "react";
-import { GoogleLogin } from "@react-oauth/google";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOkto } from "okto-sdk-react";
-import { useWallet } from "./WalletContext";
 import CustomButton from "./CustomButton";
+import { GoogleLogin } from "@react-oauth/google";
+import { useWallet } from "./WalletContext";
 
 export default function Navbar() {
-  const [showNavbar, setShowNavbar] = useState(false);
-  const [authToken, setAuthToken] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [popoverContent, setPopoverContent] = useState(null);
+  const [showPopover, setShowPopover] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [authToken, setAuthToken] = useState(null);
 
+  const dropdownRef = useRef(null); // Ref for dropdown element
   const navigate = useNavigate();
-  const { authenticate, createWallet, logOut, showWidgetModal } = useOkto();
+  const { authenticate, createWallet, logOut, showWidgetModal, getUserDetails } = useOkto();
   const { updateWalletAddress, connectWallet, disconnectWallet } = useWallet();
 
-  // Toggle Navbar visibility for mobile
-  const handleShowNavbar = () => {
-    setShowNavbar(!showNavbar);
-  };
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Google Login Handler
   const handleGoogleLogin = async (credentialResponse) => {
     try {
-      const idToken = credentialResponse.credential;
+      const idToken = credentialResponse.credential; // Extract Google ID token
       authenticate(idToken, async (authResponse, error) => {
         if (authResponse) {
           console.log("Authentication successful:", authResponse);
-          setAuthToken(authResponse.auth_token);
+          setAuthToken(authResponse.auth_token); // Set the authentication token
 
           // Fetch Wallet Address after login
-          await fetchWalletAddress();
-          setError(null);
+          await fetchWalletAddress(); // Fetch wallet address for the user
+          setError(null); // Clear any error state
         } else {
           console.error("Authentication failed:", error);
-          setError("Failed to authenticate.");
+          setError("Failed to authenticate."); // Set error state
         }
       });
     } catch (err) {
       console.error("Error during login:", err);
-      setError("Login failed.");
+      setError("Login failed."); // Handle any unexpected errors
     }
   };
 
@@ -62,13 +74,24 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       await logOut();
-      setAuthToken(null);
+      setAuthToken(null); // Clear authentication token
       updateWalletAddress(null); // Clear wallet address from context
-      setError(null);
+      setError(null); // Clear error state
       navigate("/");
     } catch (err) {
       console.error("Logout failed:", err);
       setError("Failed to log out.");
+    }
+  };
+
+  // Connect Wallet Handler
+  const handleConnectWallet = async () => {
+    try {
+      await connectWallet(); // Trigger wallet connection
+      console.log("Wallet connected");
+    } catch (err) {
+      console.error("Error connecting wallet:", err);
+      setError("Failed to connect wallet.");
     }
   };
 
@@ -91,33 +114,57 @@ export default function Navbar() {
     }
   }, [authToken]);
 
+  const fetchUserDetails = async () => {
+    try {
+      const details = await getUserDetails();
+      return details;
+    } catch (error) {
+      throw new Error("Failed to fetch user details");
+    }
+  };
+
+  const fetchWallets = async () => {
+    try {
+      const walletData = await createWallet();
+      return walletData.wallets;
+    } catch (error) {
+      throw new Error("Failed to fetch wallets");
+    }
+  };
+
+  const handleDropdownClick = async (content) => {
+    setPopoverContent(null);
+    setShowPopover(true);
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (content === "User Details") {
+        const userDetails = await fetchUserDetails();
+        setPopoverContent({ type: "User Details", data: userDetails });
+      } else if (content === "Wallet") {
+        const wallets = await fetchWallets();
+        setPopoverContent({ type: "Wallet", data: wallets });
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <nav className="w-9/12 xl:w-11/12 2xl:w-9/12 z-50 h-16 rounded-[60px] px-6 py-4 xl:py-2 bg-white backdrop-blur-xl shadow-xl border-stone-50 border-1 mx-auto mt-4 mb-16 fixed left-1/2 -translate-x-1/2">
       <div className="flex justify-between items-center h-full">
         {/* Logo Section */}
         <div className="flex items-center">
-          <a className="pl-4 font-extrabold text-2xl text-blue-700 font-serif">MV</a>
+          <a className="pl-4 font-extrabold text-2xl text-blue-700 font-serif">
+            MV
+          </a>
         </div>
 
         {/* Navigation Links */}
-        <ul className={`flex items-center gap-8 ${showNavbar ? "active" : ""}`}>
-          <li>
-            <a
-              className="font-medium text-lg cursor-pointer text-blue-700 hover:text-cyan-900"
-              href="#"
-            >
-              Liquidity Pool
-            </a>
-          </li>
-          <li>
-            <a
-              className="font-medium text-lg cursor-pointer text-blue-700 hover:text-cyan-900"
-              href="#"
-            >
-              Staking
-            </a>
-          </li>
-          {/* Display Google Login or Logout Button */}
+        <ul className="flex items-center gap-8">
           <li>
             {!authToken ? (
               <GoogleLogin
@@ -128,29 +175,60 @@ export default function Navbar() {
               <CustomButton primaryText="Logout" onClick={handleLogout} />
             )}
           </li>
-          {/* Connect Wallet Button */}
           <li>
             <CustomButton
               primaryText={!authToken ? "Connect Wallet" : "Disconnect Wallet"}
-              onClick={!authToken ? connectWallet : handleDisconnectWallet}
+              onClick={!authToken ? handleConnectWallet : handleDisconnectWallet}
             />
           </li>
-          {/* Show Widget Button */}
           <li>
-            <CustomButton
-              primaryText="Widget"
-              onClick={() => showWidgetModal()}
-            />
+            <a
+              className="font-medium text-lg cursor-pointer text-blue-700 hover:text-cyan-900"
+              href="#"
+              onClick={() => navigate("/liquidity-pool")}
+            >
+              Liquidity Pool
+            </a>
           </li>
-          {/* Link to Wallet Manager */}
           <li>
+            <a
+              className="font-medium text-lg cursor-pointer text-blue-700 hover:text-cyan-900"
+              href="#"
+              onClick={() => navigate("/staking")}
+            >
+              Staking
+            </a>
+          </li>
+
+          {/* Manage Wallet Dropdown */}
+          <li className="relative" ref={dropdownRef}>
             <CustomButton
               primaryText="Manage Wallet"
-              onClick={() => navigate("/wallet-manager")}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDropdown((prev) => !prev);
+              }}
             />
+            {showDropdown && (
+              <ul className="absolute right-0 mt-2 w-48 bg-white backdrop-blur-md rounded-md shadow-lg border p-2 text-center">
+                <li
+                  className="p-2 hover:bg-gray-200 cursor-pointer"
+                  onClick={() => handleDropdownClick("User Details")}
+                >
+                  User Details
+                </li>
+                <li
+                  className="p-2 hover:bg-gray-200 cursor-pointer"
+                  onClick={() => handleDropdownClick("Wallet")}
+                >
+                  Wallet
+                </li>
+              </ul>
+            )}
           </li>
         </ul>
       </div>
+
       {/* Display Error */}
       {error && (
         <div style={{ color: "red", textAlign: "center", marginTop: "10px" }}>
